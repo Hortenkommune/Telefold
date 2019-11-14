@@ -10,11 +10,11 @@ $allIntuneDevices = Get-GraphData -uri "https://graph.microsoft.com/beta/deviceM
 
 #Hente info i fra Education API (Grupper opprettet fra School Data Sync)
 $schools = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools" -authToken $appAuthToken
-$membersOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/60fbde2d-a367-4854-b890-63893449c03e/users" -authToken $appAuthToken
-$membersOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/60fbde2d-a367-4854-b890-63893449c03e/users?`$select=id,displayName,userPrincipalName,primaryRole" -authToken $appAuthToken
+$membersOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/$($schools[-1].id)/users" -authToken $appAuthToken
+$membersOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/$($schools[-1].id)/users?`$select=id,displayName,userPrincipalName,primaryRole" -authToken $appAuthToken
 
 #Wipe devicer i Intune
-$studentsOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/60fbde2d-a367-4854-b890-63893449c03e/users?`$filter=primaryRole eq 'student'&`$select=id,displayName,userPrincipalName,primaryRole" -authToken $appAuthToken
+$studentsOfalphaskl = Get-GraphData -uri "https://graph.microsoft.com/beta/education/schools/$($schools[-1].id)/users?`$filter=primaryRole eq 'student'&`$select=id,displayName,userPrincipalName,primaryRole" -authToken $appAuthToken
 foreach ($student in $studentsOfalphaskl) {
     $devices = Get-GraphData -uri "https://graph.microsoft.com/beta/users/$($student.id)/managedDevices?`$select=id,deviceName" -authToken $appAuthToken
     Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/beta/deviceManagement/managedDevices/$($devices[1].id)/wipe" -Headers $appAuthToken
@@ -22,9 +22,9 @@ foreach ($student in $studentsOfalphaskl) {
 
 
 #Håndtere medlemmer i Teams
-$groupID = "a709d725-19f0-44cc-9a19-423144c0e90e"
-$ownersQ = Get-Content owners
-$membersQ = Get-Content members
+$groupID = "" #AZURE AD GROUPID
+$ownersQ = Get-Content owners #Query for owners
+$membersQ = Get-Content members #Query for members
 
 $ownersNow = Get-TeamOwners -aadGroupID $groupID -authToken $appAuthToken
 $membersNow = Get-TeamMembers -aadGroupID $groupID -authToken $appAuthToken
